@@ -3,6 +3,7 @@
 #import <Analytics/SEGContext.h>
 #import <Analytics/SEGMiddleware.h>
 #import <Segment_Amplitude/SEGAmplitudeIntegrationFactory.h>
+#import <FullStoryMiddleware/FullStoryMiddleware.h>
 
 @implementation FlutterSegmentPlugin
 // Contents to be appended to the context
@@ -14,7 +15,10 @@ static NSDictionary *_appendToContextMiddleware;
     NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile: path];
     NSString *writeKey = [dict objectForKey: @"com.claimsforce.segment.WRITE_KEY"];
     BOOL trackApplicationLifecycleEvents = [[dict objectForKey: @"com.claimsforce.segment.TRACK_APPLICATION_LIFECYCLE_EVENTS"] boolValue];
+    BOOL recordScreenViews = [[dict objectForKey: @"com.claimsforce.segment.RECORD_SCREEN_VIEWS"] boolValue];
     BOOL isAmplitudeIntegrationEnabled = [[dict objectForKey: @"com.claimsforce.segment.ENABLE_AMPLITUDE_INTEGRATION"] boolValue];
+    BOOL isFullStoryIntegrationEnabled = [[dict objectForKey: @"com.claimsforce.segment.ENABLE_FULLSTORY_INTEGRATION"] boolValue];
+    NSArray *fullStoryAllowedEvents = [[dict objectForKey: @"com.claimsforce.segment.FULLSTORY_ALLOWED_EVENTS"]];
     SEGAnalyticsConfiguration *configuration = [SEGAnalyticsConfiguration configurationWithWriteKey:writeKey];
 
     // This middleware is responsible for manipulating only the context part of the request,
@@ -97,11 +101,29 @@ static NSDictionary *_appendToContextMiddleware;
       );
     };
 
+
+    if (isFullStoryIntegrationEnabled) {
+        FullStoryMiddleware *fsm = [[FullStoryMiddleware alloc] initWithAllowlistEvents: fullStoryAllowedEvents];
+
+        fsm.enableFSSessionURLInEvents = true;
+        fsm.enableGroupTraitsAsUserVars = true;
+
+        fsm.enableSendScreenAsEvents = true;
+
+        fsm.allowlistAllTrackEvents = true;
+
+        fsm.enableIdentifyEvents = true;
+
+        configuration.sourceMiddleware = @[fsm];
+    }
+
     configuration.middlewares = @[
       [[SEGBlockMiddleware alloc] initWithBlock:contextMiddleware]
     ];
 
     configuration.trackApplicationLifecycleEvents = trackApplicationLifecycleEvents;
+    configuration.recordScreenViews = recordScreenViews;
+
 
     if (isAmplitudeIntegrationEnabled) {
       [configuration use:[SEGAmplitudeIntegrationFactory instance]];

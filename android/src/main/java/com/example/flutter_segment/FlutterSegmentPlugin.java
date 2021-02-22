@@ -21,6 +21,8 @@ import static com.segment.analytics.Analytics.LogLevel;
 import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
@@ -29,6 +31,9 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+
+import com.fullstorydev.fullstory_segment_middleware.FullStorySegmentMiddleware;
+
 
 /** FlutterSegmentPlugin */
 public class FlutterSegmentPlugin implements MethodCallHandler, FlutterPlugin {
@@ -60,13 +65,41 @@ public class FlutterSegmentPlugin implements MethodCallHandler, FlutterPlugin {
 
       String writeKey = bundle.getString("com.claimsforce.segment.WRITE_KEY");
       Boolean trackApplicationLifecycleEvents = bundle.getBoolean("com.claimsforce.segment.TRACK_APPLICATION_LIFECYCLE_EVENTS");
+      Boolean recordScreenViews = bundle.getBoolean("com.claimsforce.segment.RECORD_SCREEN_VIEWS", false);
       Boolean isAmplitudeIntegrationEnabled = bundle.getBoolean("com.claimsforce.segment.ENABLE_AMPLITUDE_INTEGRATION", false);
+      Boolean isFullStoryIntegrationEnabled = bundle.getBoolean("com.claimsforce.segment.ENABLE_FULLSTORY_INTEGRATION", false);
+      String fullStoryAllowedEvents = bundle.getString("com.claimsforce.segment.FULLSTORY_ALLOWED_EVENTS");
       Boolean debug = bundle.getBoolean("com.claimsforce.segment.DEBUG", false);
 
       Analytics.Builder analyticsBuilder = new Analytics.Builder(applicationContext, writeKey);
+
+      if (isFullStoryIntegrationEnabled) {
+        FullStorySegmentMiddleware fsm = new FullStorySegmentMiddleware(applicationContext , writeKey, Arrays.asList(fullStoryAllowedEvents.split(",")));
+        // enable to insert FS session URL to Segment event properties and contexts
+        // default to true
+        fsm.enableFSSessionURLInEvents = true;
+        // when calling Segment group, send group traits as userVars
+        // default to false
+        fsm.enableGroupTraitsAsUserVars = true;
+        // when calling Segment screen, sent the screen event as custom events to FS
+        // default to false
+        fsm.enableSendScreenAsEvents = true;
+        // allow all track events as FS custom events
+        // alternatively allow list that you would like to track
+        // default to false
+        fsm.allowlistAllTrackEvents = true;
+
+        analyticsBuilder.useSourceMiddleware(fsm);
+      }
+
       if (trackApplicationLifecycleEvents) {
         // Enable this to record certain application events automatically
         analyticsBuilder.trackApplicationLifecycleEvents();
+      }
+
+      if (recordScreenViews) {
+        // Enable this to record screen views
+        analyticsBuilder.recordScreenViews();
       }
 
       if (debug) {

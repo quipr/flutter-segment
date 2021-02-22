@@ -15,9 +15,9 @@ A new flutter plugin project.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'Analytics', '3.7.0'
+  s.dependency 'Analytics', '4.1.3'
   s.dependency 'Segment-Amplitude', '3.0.1'
+  s.dependency 'FullStorySegmentMiddleware', :git => 'https://github.com/fullstorydev/fullstory-segment-middleware-ios.git', :tag => '1.1'
   s.ios.deployment_target = '8.0'
-
 end
 

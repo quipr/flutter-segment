@@ -16,6 +16,9 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
+        maven {
+            url 'https://jitpack.io'
+        }
     }
 }
 
@@ -33,7 +36,8 @@ android {
     }
 
     dependencies {
-        implementation 'com.segment.analytics.android:analytics:4.7.0'
+        implementation 'com.segment.analytics.android:analytics:4.9.0'
         implementation 'com.segment.analytics.android.integrations:amplitude:+'
+        implementation 'com.github.fullstorydev:fullstory-segment-middleware-android:1.1'
     }
 }
